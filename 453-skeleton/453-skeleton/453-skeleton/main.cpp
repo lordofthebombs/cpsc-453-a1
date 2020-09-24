@@ -34,6 +34,10 @@ void generateTriangle(CPU_Geometry& cpuGeom, float xOffset) {
 	cpuGeom.verts.push_back(glm::vec3(-0.5f + xOffset, -0.5f, 0.f));
 	cpuGeom.verts.push_back(glm::vec3(0.5f + xOffset, -0.5f, 0.f));
 	cpuGeom.verts.push_back(glm::vec3(0.f + xOffset, 0.5f, 0.f));
+
+	cpuGeom.cols.push_back(glm::vec3(1.f, 0.f, 0.f));
+	cpuGeom.cols.push_back(glm::vec3(0.f, 1.f, 0.f));
+	cpuGeom.cols.push_back(glm::vec3(0.f, 0.f, 1.f));
 }
 
 int main() {
@@ -55,17 +59,9 @@ int main() {
 	CPU_Geometry cpuGeom;
 	GPU_Geometry gpuGeom;
 
-	// vertices
+	// Triangles
 	generateTriangle(cpuGeom, -0.25f);
 	generateTriangle(cpuGeom, 0.25f);
-
-	// colours (these should be in linear space)
-	cpuGeom.cols.push_back(glm::vec3(1.f, 0.f, 0.f));
-	cpuGeom.cols.push_back(glm::vec3(0.f, 1.f, 0.f));
-	cpuGeom.cols.push_back(glm::vec3(0.f, 0.f, 1.f));
-	cpuGeom.cols.push_back(glm::vec3(1.f, 0.f, 0.f));
-	cpuGeom.cols.push_back(glm::vec3(0.f, 1.f, 0.f));
-	cpuGeom.cols.push_back(glm::vec3(0.f, 0.f, 1.f));
 
 	gpuGeom.setVerts(cpuGeom.verts);
 	gpuGeom.setCols(cpuGeom.cols);

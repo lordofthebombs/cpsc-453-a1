@@ -27,18 +27,14 @@ private:
 	ShaderProgram& shader;
 };
 
-class MyCallbacks2 : public CallbackInterface {
 
-public:
-	MyCallbacks2() {}
-
-	virtual void keyCallback(int key, int scancode, int action, int mods) {
-		if (key == GLFW_KEY_R && action == GLFW_PRESS) {
-			std::cout << "called back" << std::endl;
-		}
-	}
-};
 // END EXAMPLES
+
+void generateTriangle(CPU_Geometry& cpuGeom, float xOffset) {
+	cpuGeom.verts.push_back(glm::vec3(-0.5f + xOffset, -0.5f, 0.f));
+	cpuGeom.verts.push_back(glm::vec3(0.5f + xOffset, -0.5f, 0.f));
+	cpuGeom.verts.push_back(glm::vec3(0.f + xOffset, 0.5f, 0.f));
+}
 
 int main() {
 	Log::debug("Starting main");
@@ -60,11 +56,13 @@ int main() {
 	GPU_Geometry gpuGeom;
 
 	// vertices
-	cpuGeom.verts.push_back(glm::vec3(-0.5f, -0.5f, 0.f));
-	cpuGeom.verts.push_back(glm::vec3(0.5f, -0.5f, 0.f));
-	cpuGeom.verts.push_back(glm::vec3(0.f, 0.5f, 0.f));
+	generateTriangle(cpuGeom, -0.25f);
+	generateTriangle(cpuGeom, 0.25f);
 
 	// colours (these should be in linear space)
+	cpuGeom.cols.push_back(glm::vec3(1.f, 0.f, 0.f));
+	cpuGeom.cols.push_back(glm::vec3(0.f, 1.f, 0.f));
+	cpuGeom.cols.push_back(glm::vec3(0.f, 0.f, 1.f));
 	cpuGeom.cols.push_back(glm::vec3(1.f, 0.f, 0.f));
 	cpuGeom.cols.push_back(glm::vec3(0.f, 1.f, 0.f));
 	cpuGeom.cols.push_back(glm::vec3(0.f, 0.f, 1.f));
@@ -81,7 +79,7 @@ int main() {
 
 		glEnable(GL_FRAMEBUFFER_SRGB);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
 
 		window.swapBuffers();

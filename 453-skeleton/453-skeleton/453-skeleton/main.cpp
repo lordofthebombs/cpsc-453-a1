@@ -171,7 +171,7 @@ int main() {
 
 
 	// Serpinsky triangle generation
-	generateSerpinsky(first, second, third, triangles, 2);
+	generateSerpinsky(first, second, third, triangles, 6);
 	serpinskyAllColored(triangles);
 
 	// Uploads data to GPU
@@ -189,7 +189,7 @@ int main() {
 
 		shader.use();
 		trianglesGPU.bind();
-		glDrawArrays(GL_POINTS, 0, GLsizei(triangles.verts.size()));
+		glDrawArrays(GL_TRIANGLES, 0, GLsizei(triangles.verts.size()));
 
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui

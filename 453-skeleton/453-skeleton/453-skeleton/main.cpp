@@ -2,6 +2,7 @@
 #include <cmath>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <vector>
 
 
 #include <iostream>
@@ -79,18 +80,18 @@ glm::vec3 pointOnCircle(float angle, float radius) {
 	);
 }
 
-float* serpisnkyMidpoint(float vertex1[], float vertex2[2]) {
-	float point[2];
-	for (int i = 0; i < 2; i++) point[i] = (vertex1[i] * 0.5) + (vertex2[i] * 0.5);
+// Gets midpoint of two vertices
+std::vector<float> midPoint(std::vector<float> vertex1, std::vector<float> vertex2) {
+	std::vector<float> point;
+	for (int i = 0; i < 2; i++) point.push_back((vertex1[i] * 0.5) + (vertex2[i] * 0.5));
 	return point;
 }
 
-void generateSerpinsky(float* a, float* b, float* c, CPU_Geometry& triangle, int iterations) {
-	// Mid points for triangles
+void generateSerpinsky(std::vector<float> a, std::vector<float> b, std::vector<float> c, CPU_Geometry& triangle, int iterations) {
 	if (iterations > 0) {
-		float* d = serpisnkyMidpoint(a, b);
-		float* e = serpisnkyMidpoint(a, c);
-		float* f = serpisnkyMidpoint(b, c);
+		std::vector<float> d = midPoint(a, b);
+		std::vector<float> e = midPoint(a, c);
+		std::vector<float> f = midPoint(b, c);
 		generateSerpinsky(a, d, e, triangle, iterations - 1);
 		generateSerpinsky(d, b, f, triangle, iterations - 1);
 		generateSerpinsky(e, f, c, triangle, iterations - 1);
@@ -163,18 +164,15 @@ int main() {
 	GPU_Geometry trianglesGPU;
 
 	// Initial triangle points for serpinsky triangle
-	float second[2] = { -0.5, -0.5 };
-	float third[2] = { 0.5, -0.5 };
-	float first[2] = { 0.0, 0.5 };
+	std::vector<float> second{ -0.5, -0.5 };
+	std::vector<float> third{ 0.5, -0.5 };
+	std::vector<float> first{ 0.0, 0.5 };
 
 
 
 	// Serpinsky triangle generation
-	generateSerpinsky(first, second, third, triangles, 0);
-	triangles.cols.push_back(glm::vec3(1.f, 0.f, 0.f));
-	triangles.cols.push_back(glm::vec3(0.f, 1.f, 0.f));
-	triangles.cols.push_back(glm::vec3(0.f, 0.f, 1.f));
-	//serpinskyAllColored(triangles);
+	generateSerpinsky(first, second, third, triangles, 2);
+	serpinskyAllColored(triangles);
 
 	// Uploads data to GPU
 	trianglesGPU.setVerts(triangles.verts);

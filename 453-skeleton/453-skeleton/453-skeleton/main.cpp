@@ -14,9 +14,17 @@
 #include "Window.h"
 
 
+struct State {
+	int segments = 4;
+	bool operator == (State const& other) const {
+		return segments == other.segments;
+	}
+};
 
-
-
+float randomFloat() {
+	float r = ((float) rand() / (RAND_MAX));
+	return r;
+}
 
 // EXAMPLE CALLBACKS
 class MyCallbacks : public CallbackInterface {
@@ -25,12 +33,28 @@ public:
 	MyCallbacks(ShaderProgram& shader) : shader(shader) {}
 
 	virtual void keyCallback(int key, int scancode, int action, int mods) {
-		if (key == GLFW_KEY_R && action == GLFW_PRESS) {
-			shader.recompile();
+		if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+			if (key == GLFW_KEY_R) {
+				shader.recompile();
+			}
+			if (key == GLFW_KEY_LEFT) {
+				if (state.segments > 0) {
+					state.segments--;
+				}
+			}
+			if (key == GLFW_KEY_RIGHT) {
+				if (state.segments < 1024) {
+					state.segments++;
+				}
+			}
 		}
+	}
+	State getState() {
+		return state;
 	}
 
 private:
+	State state;
 	ShaderProgram& shader;
 };
 
@@ -55,7 +79,61 @@ glm::vec3 pointOnCircle(float angle, float radius) {
 	);
 }
 
-void generateCircle(CPU_Geometry &cpuGeom, float segmentNumber) {
+float* serpisnkyMidpoint(float vertex1[], float vertex2[2]) {
+	float point[2];
+	for (int i = 0; i < 2; i++) point[i] = (vertex1[i] * 0.5) + (vertex2[i] * 0.5);
+	return point;
+}
+
+void generateSerpinsky(float* a, float* b, float* c, CPU_Geometry& triangle, int iterations) {
+	// Mid points for triangles
+	if (iterations > 0) {
+		float* d = serpisnkyMidpoint(a, b);
+		float* e = serpisnkyMidpoint(a, c);
+		float* f = serpisnkyMidpoint(b, c);
+		generateSerpinsky(a, d, e, triangle, iterations - 1);
+		generateSerpinsky(d, b, f, triangle, iterations - 1);
+		generateSerpinsky(e, f, c, triangle, iterations - 1);
+	}
+	else {
+		triangle.verts.push_back(glm::vec3(a[0], a[1], 0.f));
+		triangle.verts.push_back(glm::vec3(b[0], b[1], 0.f));
+		triangle.verts.push_back(glm::vec3(c[0], c[1], 0.f));
+	}
+}
+
+void serpinskyAllColored(CPU_Geometry& triangle) {
+	for (int vert = 0; vert < triangle.verts.size(); vert++) triangle.cols.push_back(glm::vec3(randomFloat(), randomFloat(), randomFloat()));
+}
+
+void generateSun(CPU_Geometry& triangles, CPU_Geometry& lines, float segmentNumber) {
+	float step = (2 * M_PI) / segmentNumber;
+	float angle = 0.0;
+	for (int i = 0; i < segmentNumber; ++i) {
+		glm::vec3 first = pointOnCircle(angle, 0.5);
+		glm::vec3 second = pointOnCircle(angle + step, 0.5);
+		glm::vec3 middle = pointOnCircle(angle + (0.5 * step), 0.75);
+		glm::vec3 middle2 = pointOnCircle(angle + (0.5 * step), 0.95);
+
+		triangles.verts.push_back(first);
+		triangles.verts.push_back(middle);
+		triangles.verts.push_back(second);
+
+		glm::vec3 red(1.0, 0.0, 0.0);
+		triangles.cols.push_back(red);
+		triangles.cols.push_back(red);
+		triangles.cols.push_back(red);
+
+		lines.verts.push_back(middle);
+		lines.verts.push_back(middle2);
+		triangles.cols.push_back(red);
+		triangles.cols.push_back(red);
+
+		angle += step;
+	}
+}
+
+void generateCircle(CPU_Geometry& cpuGeom, float segmentNumber) {
 	float step = (2 * M_PI) / segmentNumber;
 	float angle = 0.0;
 	for (int i = 0; i < segmentNumber; ++i) {
@@ -64,7 +142,6 @@ void generateCircle(CPU_Geometry &cpuGeom, float segmentNumber) {
 		angle += step;
 	}
 }
-
 int main() {
 	Log::debug("Starting main");
 
@@ -78,37 +155,45 @@ int main() {
 	ShaderProgram shader("shaders/test.vert", "shaders/test.frag");
 
 	// CALLBACKS
-	window.setCallbacks(std::make_shared<MyCallbacks>(shader)); // can also update callbacks to new ones
+	auto callbacks = std::make_shared<MyCallbacks>(shader);
+	window.setCallbacks(callbacks); // can also update callbacks to new ones
 
 	// GEOMETRY
-	CPU_Geometry cpuGeom;
-	GPU_Geometry gpuGeom;
-	CPU_Geometry cpuGeom2;
-	GPU_Geometry gpuGeom2;
-	// Triangles
-	generateCircle(cpuGeom, 100);
-	generateTriangle(cpuGeom2, 0.25f);
+	CPU_Geometry triangles;
+	GPU_Geometry trianglesGPU;
+
+	// Initial triangle points for serpinsky triangle
+	float second[2] = { -0.5, -0.5 };
+	float third[2] = { 0.5, -0.5 };
+	float first[2] = { 0.0, 0.5 };
+
+
+
+	// Serpinsky triangle generation
+	generateSerpinsky(first, second, third, triangles, 0);
+	triangles.cols.push_back(glm::vec3(1.f, 0.f, 0.f));
+	triangles.cols.push_back(glm::vec3(0.f, 1.f, 0.f));
+	triangles.cols.push_back(glm::vec3(0.f, 0.f, 1.f));
+	//serpinskyAllColored(triangles);
 
 	// Uploads data to GPU
-	gpuGeom.setVerts(cpuGeom.verts);
-	gpuGeom.setCols(cpuGeom.cols);
-	gpuGeom2.setVerts(cpuGeom2.verts);
-	gpuGeom2.setCols(cpuGeom2.cols);
+	trianglesGPU.setVerts(triangles.verts);
+	trianglesGPU.setCols(triangles.cols);
 
+
+	State state;
 	// RENDER LOOP
 	while (!window.shouldClose()) {
 		glfwPollEvents();
-
 
 		glEnable(GL_FRAMEBUFFER_SRGB);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		shader.use();
-		gpuGeom.bind();
-		glDrawArrays(GL_LINE_LOOP, 0, cpuGeom.verts.size());
+		trianglesGPU.bind();
+		glDrawArrays(GL_POINTS, 0, GLsizei(triangles.verts.size()));
 
-		gpuGeom2.bind();
-		glDrawArrays(GL_LINE_STRIP, 0, 3);
+
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui
 
 		window.swapBuffers();

@@ -22,6 +22,7 @@ struct State {
 	}
 };
 
+// Random float between 0 and 1 found at https://stackoverflow.com/questions/9878965/rand-between-0-and-1
 float randomFloat() {
 	float r = ((float) rand() / (RAND_MAX));
 	return r;
@@ -61,6 +62,17 @@ private:
 
 
 // END EXAMPLES
+
+
+// Colors
+glm::vec3 red = glm::vec3(1.f, 0.f, 0.f);
+glm::vec3 green = glm::vec3(0.f, 1.f, 0.f);
+glm::vec3 blue = glm::vec3(0.f, 0.f, 1.f);
+
+// Helper function for entering points as data
+glm::vec3 point(std::vector<float> point) {
+	return glm::vec3(point[0], point[1], 0.f);
+}
 
 void generateTriangle(CPU_Geometry &cpuGeom, float xOffset) {
 	cpuGeom.verts.push_back(glm::vec3(-0.5f + xOffset, -0.5f, 0.f));
@@ -162,21 +174,65 @@ int main() {
 	// GEOMETRY
 	CPU_Geometry triangles;
 	GPU_Geometry trianglesGPU;
+	CPU_Geometry snowflake;
+	GPU_Geometry snowflakeGPU;
+	CPU_Geometry square;
+	GPU_Geometry squareGPU;
+	CPU_Geometry diamond;
+	GPU_Geometry diamondGPU;
 
 	// Initial triangle points for serpinsky triangle
 	std::vector<float> second{ -0.5, -0.5 };
 	std::vector<float> third{ 0.5, -0.5 };
 	std::vector<float> first{ 0.0, 0.5 };
 
+	// Initial points for square
+	std::vector<float> point1{ 0.5, 0.5 };
+	std::vector<float> point2{ -0.5, 0.5 };
+	std::vector<float> point3{ -0.5, -0.5 };
+	std::vector<float> point4{ 0.5, -0.5 };
+
+	// Initial points for diamond
+	std::vector<float> point5{ 0.f, 0.5 };
+	std::vector<float> point6{ -0.5, 0.f };
+	std::vector<float> point7{ 0.f, -0.5 };
+	std::vector<float> point8{ 0.5, 0.f };
+
+	//Square
+	square.verts.push_back(point(point1));
+	square.verts.push_back(point(point2));
+	square.verts.push_back(point(point3));
+	square.verts.push_back(point(point4));
+	square.cols.push_back(red);
+	square.cols.push_back(red);
+	square.cols.push_back(red);
+	square.cols.push_back(red);
+
+	// Diamond
+	diamond.verts.push_back(point(point5));
+	diamond.verts.push_back(point(point6));
+	diamond.verts.push_back(point(point7));
+	diamond.verts.push_back(point(point8));
+	diamond.cols.push_back(blue);
+	diamond.cols.push_back(blue);
+	diamond.cols.push_back(blue);
+	diamond.cols.push_back(blue);
+
 
 
 	// Serpinsky triangle generation
-	generateSerpinsky(first, second, third, triangles, 6);
+	generateSerpinsky(first, second, third, triangles, 0);
 	serpinskyAllColored(triangles);
 
 	// Uploads data to GPU
-	trianglesGPU.setVerts(triangles.verts);
-	trianglesGPU.setCols(triangles.cols);
+	//trianglesGPU.setVerts(triangles.verts);
+	//trianglesGPU.setCols(triangles.cols);
+	//snowflakeGPU.setVerts(snowflake.verts);
+	//snowflakeGPU.setCols(snowflake.cols);
+	squareGPU.setVerts(square.verts);
+	squareGPU.setCols(square.cols);
+	diamondGPU.setVerts(diamond.verts);
+	diamondGPU.setCols(diamond.cols);
 
 
 	State state;
@@ -188,8 +244,10 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		shader.use();
-		trianglesGPU.bind();
-		glDrawArrays(GL_TRIANGLES, 0, GLsizei(triangles.verts.size()));
+		squareGPU.bind();
+		glDrawArrays(GL_LINE_LOOP, 0, GLsizei(square.verts.size()));
+		diamondGPU.bind();
+		glDrawArrays(GL_LINE_LOOP, 0, GLsizei(diamond.verts.size()));
 
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui

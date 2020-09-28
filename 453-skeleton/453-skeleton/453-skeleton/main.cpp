@@ -111,12 +111,6 @@ void colorAllVerts(CPU_Geometry& cpuGeom, glm::vec3 color) {
 	for (int vert = 0; vert < cpuGeom.verts.size(); vert++) cpuGeom.cols.push_back(color);
 }
 
-void colorSquareDiamond(CPU_Geometry& cpuGeom, glm::vec3 color) {
-	for (int vert = 0; vert < cpuGeom.verts.size() - 3; vert++) cpuGeom.cols.push_back(color);
-	cpuGeom.cols.push_back(BLUE);
-	cpuGeom.cols.push_back(BLUE);
-}
-
 void generateSquareDiamond(CPU_Geometry& squareDiamond, int iterations, std::vector<std::vector<float>> initialPoints) {
 	// An interesting observation I made is that the next 2 shapes are half the size of the first 2
 	float factor = 0.5f;
@@ -184,8 +178,7 @@ int main() {
 
 	// Square Diamond generation
 	generateSquareDiamond(squareDiamond, 5, squareDiamondPoints);
-	//colorAllVerts(squareDiamond, GREEN);
-	colorSquareDiamond(squareDiamond, GREEN);
+	colorAllVerts(squareDiamond, GREEN);
 
 
 	// Uploads data to GPU

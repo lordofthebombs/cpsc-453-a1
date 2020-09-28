@@ -65,31 +65,19 @@ private:
 
 
 // Colors
-glm::vec3 red = glm::vec3(1.f, 0.f, 0.f);
-glm::vec3 green = glm::vec3(0.f, 1.f, 0.f);
-glm::vec3 blue = glm::vec3(0.f, 0.f, 1.f);
+glm::vec3 const RED = glm::vec3(1.f, 0.f, 0.f);
+glm::vec3 const GREEN = glm::vec3(0.f, 1.f, 0.f);
+glm::vec3 const BLUE = glm::vec3(0.f, 0.f, 1.f);
+glm::vec3 const BLACK = glm::vec3(0.f, 0.f, 0.f);
 
 // Helper function for entering points as data
 glm::vec3 point(std::vector<float> point) {
 	return glm::vec3(point[0], point[1], 0.f);
 }
 
-void generateTriangle(CPU_Geometry &cpuGeom, float xOffset) {
-	cpuGeom.verts.push_back(glm::vec3(-0.5f + xOffset, -0.5f, 0.f));
-	cpuGeom.verts.push_back(glm::vec3(0.5f + xOffset, -0.5f, 0.f));
-	cpuGeom.verts.push_back(glm::vec3(0.f + xOffset, 0.5f, 0.f));
-
-	cpuGeom.cols.push_back(glm::vec3(1.f, 0.f, 0.f));
-	cpuGeom.cols.push_back(glm::vec3(0.f, 1.f, 0.f));
-	cpuGeom.cols.push_back(glm::vec3(0.f, 0.f, 1.f));
-}
-
-glm::vec3 pointOnCircle(float angle, float radius) {
-	return glm::vec3(
-		radius * cos(angle),
-		radius * sin(angle),
-		0.0
-	);
+// Gets points for square diamond
+glm::vec3 squareDiamondPoint(std::vector<float> point, float factor) {
+	return glm::vec3((point[0] * factor), (point[1] * factor), 0.f);
 }
 
 // Gets midpoint of two vertices
@@ -123,51 +111,27 @@ void colorAllVerts(CPU_Geometry& cpuGeom, glm::vec3 color) {
 	for (int vert = 0; vert < cpuGeom.verts.size(); vert++) cpuGeom.cols.push_back(color);
 }
 
+void colorSquareDiamond(CPU_Geometry& cpuGeom, glm::vec3 color) {
+	for (int vert = 0; vert < cpuGeom.verts.size() - 3; vert++) cpuGeom.cols.push_back(color);
+	cpuGeom.cols.push_back(BLUE);
+	cpuGeom.cols.push_back(BLUE);
+}
+
 void generateSquareDiamond(CPU_Geometry& squareDiamond, int iterations, std::vector<std::vector<float>> initialPoints) {
-	if (iterations > 0) {
-		// something
+	// An interesting observation I made is that the next 2 shapes are half the size of the first 2
+	float factor = 0.5f;
+
+	for (int i = 0; i < initialPoints.size(); i++) squareDiamond.verts.push_back(point(initialPoints[i]));
+
+	for (int i = 0; i < iterations; i++) {
+		for (int j = 0; j < initialPoints.size(); j++) squareDiamond.verts.push_back(squareDiamondPoint(initialPoints[j], factor));
+		factor *= 0.5f;
 	}
-	else {
-		for (int i = 0; i < initialPoints.size(); i++) squareDiamond.verts.push_back(point(initialPoints[i]));
-	}
+
+	
 }
 
-void generateSun(CPU_Geometry& triangles, CPU_Geometry& lines, float segmentNumber) {
-	float step = (2 * M_PI) / segmentNumber;
-	float angle = 0.0;
-	for (int i = 0; i < segmentNumber; ++i) {
-		glm::vec3 first = pointOnCircle(angle, 0.5);
-		glm::vec3 second = pointOnCircle(angle + step, 0.5);
-		glm::vec3 middle = pointOnCircle(angle + (0.5 * step), 0.75);
-		glm::vec3 middle2 = pointOnCircle(angle + (0.5 * step), 0.95);
 
-		triangles.verts.push_back(first);
-		triangles.verts.push_back(middle);
-		triangles.verts.push_back(second);
-
-		glm::vec3 red(1.0, 0.0, 0.0);
-		triangles.cols.push_back(red);
-		triangles.cols.push_back(red);
-		triangles.cols.push_back(red);
-
-		lines.verts.push_back(middle);
-		lines.verts.push_back(middle2);
-		triangles.cols.push_back(red);
-		triangles.cols.push_back(red);
-
-		angle += step;
-	}
-}
-
-void generateCircle(CPU_Geometry& cpuGeom, float segmentNumber) {
-	float step = (2 * M_PI) / segmentNumber;
-	float angle = 0.0;
-	for (int i = 0; i < segmentNumber; ++i) {
-		cpuGeom.verts.push_back(pointOnCircle(angle, 1.0));
-		cpuGeom.cols.push_back(glm::vec3(1.0, 0.0, 0.0));
-		angle += step;
-	}
-}
 int main() {
 	Log::debug("Starting main");
 
@@ -219,8 +183,9 @@ int main() {
 	serpinskyAllColored(triangles);
 
 	// Square Diamond generation
-	generateSquareDiamond(squareDiamond, 0, squareDiamondPoints);
-	colorAllVerts(squareDiamond, green);
+	generateSquareDiamond(squareDiamond, 5, squareDiamondPoints);
+	//colorAllVerts(squareDiamond, GREEN);
+	colorSquareDiamond(squareDiamond, GREEN);
 
 
 	// Uploads data to GPU

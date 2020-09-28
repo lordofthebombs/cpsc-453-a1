@@ -119,6 +119,19 @@ void serpinskyAllColored(CPU_Geometry& triangle) {
 	for (int vert = 0; vert < triangle.verts.size(); vert++) triangle.cols.push_back(glm::vec3(randomFloat(), randomFloat(), randomFloat()));
 }
 
+void colorAllVerts(CPU_Geometry& cpuGeom, glm::vec3 color) {
+	for (int vert = 0; vert < cpuGeom.verts.size(); vert++) cpuGeom.cols.push_back(color);
+}
+
+void generateSquareDiamond(CPU_Geometry& squareDiamond, int iterations, std::vector<std::vector<float>> initialPoints) {
+	if (iterations > 0) {
+		// something
+	}
+	else {
+		for (int i = 0; i < initialPoints.size(); i++) squareDiamond.verts.push_back(point(initialPoints[i]));
+	}
+}
+
 void generateSun(CPU_Geometry& triangles, CPU_Geometry& lines, float segmentNumber) {
 	float step = (2 * M_PI) / segmentNumber;
 	float angle = 0.0;
@@ -176,12 +189,11 @@ int main() {
 	GPU_Geometry trianglesGPU;
 	CPU_Geometry snowflake;
 	GPU_Geometry snowflakeGPU;
-	CPU_Geometry square;
-	GPU_Geometry squareGPU;
-	CPU_Geometry diamond;
-	GPU_Geometry diamondGPU;
+	CPU_Geometry squareDiamond;
+	GPU_Geometry squareDiamondGPU;
 
-	// Initial triangle points for serpinsky triangle
+
+	// Initial triangle points for serpinsky triangle and koch snowflake
 	std::vector<float> second{ -0.5, -0.5 };
 	std::vector<float> third{ 0.5, -0.5 };
 	std::vector<float> first{ 0.0, 0.5 };
@@ -198,25 +210,7 @@ int main() {
 	std::vector<float> point7{ 0.f, -0.5 };
 	std::vector<float> point8{ 0.5, 0.f };
 
-	//Square
-	square.verts.push_back(point(point1));
-	square.verts.push_back(point(point2));
-	square.verts.push_back(point(point3));
-	square.verts.push_back(point(point4));
-	square.cols.push_back(red);
-	square.cols.push_back(red);
-	square.cols.push_back(red);
-	square.cols.push_back(red);
-
-	// Diamond
-	diamond.verts.push_back(point(point5));
-	diamond.verts.push_back(point(point6));
-	diamond.verts.push_back(point(point7));
-	diamond.verts.push_back(point(point8));
-	diamond.cols.push_back(blue);
-	diamond.cols.push_back(blue);
-	diamond.cols.push_back(blue);
-	diamond.cols.push_back(blue);
+	std::vector<std::vector<float>> squareDiamondPoints{point1, point2, point3, point4, point1, point5, point6, point7, point8, point5};
 
 
 
@@ -224,15 +218,21 @@ int main() {
 	generateSerpinsky(first, second, third, triangles, 0);
 	serpinskyAllColored(triangles);
 
+	// Square Diamond generation
+	generateSquareDiamond(squareDiamond, 0, squareDiamondPoints);
+	colorAllVerts(squareDiamond, green);
+
+
 	// Uploads data to GPU
-	//trianglesGPU.setVerts(triangles.verts);
-	//trianglesGPU.setCols(triangles.cols);
-	//snowflakeGPU.setVerts(snowflake.verts);
-	//snowflakeGPU.setCols(snowflake.cols);
-	squareGPU.setVerts(square.verts);
-	squareGPU.setCols(square.cols);
-	diamondGPU.setVerts(diamond.verts);
-	diamondGPU.setCols(diamond.cols);
+	trianglesGPU.setVerts(triangles.verts);
+	trianglesGPU.setCols(triangles.cols);
+
+	snowflakeGPU.setVerts(snowflake.verts);
+	snowflakeGPU.setCols(snowflake.cols);
+
+	squareDiamondGPU.setVerts(squareDiamond.verts);
+	squareDiamondGPU.setCols(squareDiamond.cols);
+
 
 
 	State state;
@@ -244,10 +244,9 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		shader.use();
-		squareGPU.bind();
-		glDrawArrays(GL_LINE_LOOP, 0, GLsizei(square.verts.size()));
-		diamondGPU.bind();
-		glDrawArrays(GL_LINE_LOOP, 0, GLsizei(diamond.verts.size()));
+		squareDiamondGPU.bind();
+		glDrawArrays(GL_LINE_LOOP, 0, GLsizei(squareDiamond.verts.size()));
+		
 
 
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui

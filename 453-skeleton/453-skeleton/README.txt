@@ -6,4 +6,5 @@ KNOWN BUGS:
 - The colors flash in the Serpinsky Triangle
 - The colors are not quite as even as they should be in the Square Diamond
 - The initial iteration of the scene doesn't draw on screen, for some reason the initial iteration is always "skipped"
+- You will need to press the left or right arrow keys to draw the next scene because of the bug mentioned above
 - The koch snowflake isn't building correctly
